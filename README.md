@@ -3,6 +3,9 @@
 为网易有道词典 **8.10.8.0** 提供免安装封装、启动脚本与关闭自动更新的辅助措施。
 **非官方发行版，不提供会员权限，不保证旧版在线服务长期可用。**
 
+**正式开发仓库仅使用 `org-xp/xp-youdao` 的 `main` 分支。** 旧仓库保留作历史副本，不再向旧地址推送。
+担心误删后无法恢复，请先阅读下面的“恢复与后续开发”并保存一份完整 Release ZIP 到项目目录之外。
+
 ## 普通用户：下载即可使用
 
 1. 打开 https://github.com/org-xp/xp-youdao/releases/latest
@@ -52,6 +55,60 @@ git lfs pull
 
 `8.10.8.0/libcef.dll` 使用 Git LFS，完整大小为 **143,979,576 字节**。
 启动脚本会检查版本与运行文件是否完整，再应用防更新措施。
+
+## 恢复与后续开发
+
+### 误删本地项目后的恢复
+
+**普通使用最稳妥的恢复入口是完整 Release ZIP**；不要下载 `Source code (zip)`，它可能只有 LFS 指针。
+开发者从正式仓库重新克隆后，先做只读完整性检查，再启动：
+
+```powershell
+git lfs install
+git clone https://github.com/org-xp/xp-youdao.git
+cd xp-youdao
+git lfs pull
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\test-recovery.ps1
+.\start-youdao.cmd
+```
+
+`test-recovery.ps1` 校验全部 **612 个程序、词库和组件文件**的 SHA-256、程序版本、启动文件及 PowerShell 语法；默认不启动程序，不修改注册表或个人设置。
+清单来自从正式仓库全新拉取的 8.10.8.0 基线，不依赖旧工作目录。它只能确认文件完整，不能替代实际启动测试。
+
+GitHub Actions 中的 **Restore and launch on clean Windows** 会在每次 `main` 推送和 Pull Request 时：
+
+1. 在独立的 GitHub Windows 托管环境拉取完整历史和 LFS，校验 Git 对象和运行文件。
+2. 构建便携包，解压到含空格的新路径，在没有有道用户配置和安装注册表项的环境启动。
+3. 确认进程加载包内 `libcef.dll`，继续存活至少 30 秒，防更新配置和安装路径正确。
+4. 通过后保留构建包及 Git 源码 bundle（90 天）；长期恢复仍应使用保留的 Release，并另存离线副本。
+
+这是启动冒烟检查，**不代表全部在线功能、所有 Windows 版本或永久防更新得到保证**。
+实际测试结果以对应提交的 Actions 运行状态为准；没有绿色结果的提交不能当成已验证稳定版。
+
+### 新版本改坏了，仍能退回稳定版本
+
+- **开发统一推送 `org-xp/xp-youdao` 的 `main`，日常改动优先新建 `codex/说明` 分支。** 不要在旧仓库继续开发，也不要强制推送覆盖主分支历史。
+- 已发布的稳定标签和 Release ZIP 保留，不挪动旧标签、不覆盖旧附件。新的维护变更使用新的标签、Release 和校验值。
+- 恢复老版本时另开目录，不在有未提交工作的目录里 `reset --hard`。例如恢复第 2 版：
+
+```powershell
+git clone --branch v8.10.8.0-portable.2 https://github.com/org-xp/xp-youdao.git xp-youdao-stable
+cd xp-youdao-stable
+git lfs pull
+# 第 2 版尚未包含 test-recovery.ps1；其对应 Release ZIP 有逐文件校验清单。
+.\start-youdao.cmd
+```
+
+从稳定标签继续修改时先 `git switch -c codex/repair`，再正常提交和推送；标签检出不是不能修改，只是默认处于 detached HEAD。
+删除、重装前先 `git status`，有价值的改动应提交并推送到正式仓库；未提交、未推送的修改不受远程仓库保护。
+
+### 哪些内容不在公开仓库里
+
+- 用户设置、登录状态、生词本缓存等位于 `%LOCALAPPDATA%\Yodao\DeskDict`，**不会随项目克隆恢复**。个人数据应单独备份，不能上传到公开仓库。
+- 本机快捷方式、日志、`guid.dat`、`vendor.dat`、自动更新下载文件不作为程序依赖发布。
+- `dist/` 中的本地构建与验证记录不上传 Git；需要长期保存的发布包应上传到 Release，并在项目外再保存一份。
+- 远程仓库和 Release 都不是不可删除的备份；误删整个 GitHub 仓库、账户问题或网络不可用时，需要独立的离线副本。
+- 发布附带的 `recovery-source.bundle` 保存源码与提交历史，但 **Git bundle 不包含 LFS 大文件**。离线保存时必须同时保存完整的便携 ZIP（含真实 `libcef.dll`），不能只保存 bundle。
 
 ## 防更新方式与验证边界
 

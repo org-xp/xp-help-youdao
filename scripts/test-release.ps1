@@ -24,6 +24,9 @@ try {
             'THIRD-PARTY-NOTICE.md','SHA256SUMS.txt','BUILD.txt')) {
         if (-not $entries.ContainsKey($required)) { throw "Missing: $required" }
     }
+    if ($entries.ContainsKey('runtime-files.sha256') -xor $entries.ContainsKey('scripts/test-recovery.ps1')) {
+        throw 'Recovery checker and runtime manifest must be shipped together.'
+    }
     if ($entries['8.10.8.0/libcef.dll'].Length -ne 143979576) { throw 'LFS payload is not hydrated.' }
     $reader = New-Object IO.StreamReader($entries['SHA256SUMS.txt'].Open())
     try { $lines = $reader.ReadToEnd() -split "`n" | Where-Object { $_ } } finally { $reader.Dispose() }

@@ -28,10 +28,10 @@ if ($LASTEXITCODE -ne 0) { throw 'Cannot list tracked files.' }
 $files = @($tracked | Where-Object {
     $_ -match '^(8\.10\.8\.0|Stable)/' -or
     $_ -in @('YoudaoDict.exe','YodaoDict.exe','InstallHelper.exe','uninst.exe',
-             'start-youdao.cmd','README.md','THIRD-PARTY-NOTICE.md',
-             'scripts/start-youdao.ps1','scripts/protect-youdao.ps1','scripts/install-shortcuts.ps1')
+             'start-youdao.cmd','README.md','THIRD-PARTY-NOTICE.md','runtime-files.sha256',
+             'scripts/start-youdao.ps1','scripts/protect-youdao.ps1','scripts/install-shortcuts.ps1','scripts/test-recovery.ps1')
 } | Sort-Object)
-foreach ($required in @('start-youdao.cmd','scripts/protect-youdao.ps1','README.md','THIRD-PARTY-NOTICE.md','8.10.8.0/libcef.dll')) {
+foreach ($required in @('start-youdao.cmd','scripts/protect-youdao.ps1','README.md','THIRD-PARTY-NOTICE.md','8.10.8.0/libcef.dll','runtime-files.sha256','scripts/test-recovery.ps1')) {
     if ($required -notin $files) { throw "Missing tracked release file: $required" }
 }
 foreach ($file in $files) {
@@ -39,6 +39,8 @@ foreach ($file in $files) {
         throw "Private or runtime file in release: $file"
     }
 }
+
+& (Join-Path $PSScriptRoot 'test-recovery.ps1') -RepoRoot $root
 
 New-Item -ItemType Directory -Path $output -Force | Out-Null
 if (Test-Path -LiteralPath $zipPath) { throw "Output already exists: $zipPath (choose another output folder)." }

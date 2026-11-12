@@ -1,0 +1,54 @@
+name: Restore and launch on clean Windows
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  recovery:
+    runs-on: windows-2022
+    timeout-minutes: 15
+    defaults:
+      run:
+        shell: powershell
+        working-directory: restored project
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          path: restored project
+          fetch-depth: 0
+          lfs: true
+          persist-credentials: false
+      - name: Validate full fresh clone
+        run: |
+          git fsck --full
+          if ($LASTEXITCODE -ne 0) { throw 'Git object validation failed.' }
+          git lfs fsck
+          if ($LASTEXITCODE -ne 0) { throw 'LFS validation failed.' }
+          .\scripts\test-recovery.ps1
+      - name: Build and verify portable recovery package
+        run: |
+          .\scripts\build-release.ps1
+          .\scripts\test-release.ps1 -ZipPath .\dist\YoudaoDict-8.10.8.0-Portable-Windows.zip
+          git bundle create .\dist\recovery-source.bundle --all
+          if ($LASTEXITCODE -ne 0) { throw 'Source bundle creation failed.' }
+          git bundle verify .\dist\recovery-source.bundle
+          if ($LASTEXITCODE -ne 0) { throw 'Source bundle verification failed.' }
+      - name: Launch extracted package in a fresh user profile
+        run: |
+          $target = Join-Path $env:RUNNER_TEMP 'restored portable with spaces'
+          Expand-Archive -LiteralPath .\dist\YoudaoDict-8.10.8.0-Portable-Windows.zip -DestinationPath $target
+          $script = Join-Path $target 'YoudaoDict-8.10.8.0-Portable-Windows\scripts\test-recovery.ps1'
+          & $script -SmokeTest
+      - name: Keep verified recovery files for 90 days
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: recovery-${{ github.sha }}
+          path: restored project/dist/*
+          if-no-files-found: error
+          retention-days: 90
