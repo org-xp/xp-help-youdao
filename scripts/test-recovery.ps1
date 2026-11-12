@@ -47,6 +47,9 @@ if (-not $SmokeTest) {
 if ($env:GITHUB_ACTIONS -ne 'true' -or $env:RUNNER_ENVIRONMENT -ne 'github-hosted') {
     throw 'SmokeTest is allowed only on a disposable GitHub-hosted Windows runner.'
 }
+if ([Environment]::Is64BitProcess -and $PSVersionTable.PSVersion.Major -le 5) {
+    throw 'Run SmokeTest with SysWOW64\WindowsPowerShell\v1.0\powershell.exe to inspect the x86 application modules.'
+}
 if (Get-Process YoudaoDict -ErrorAction SilentlyContinue) { throw 'Another Youdao process exists; refusing launch test.' }
 $desk = Join-Path $env:LOCALAPPDATA 'Yodao\DeskDict'
 if ((Test-Path -LiteralPath $desk) -or (Test-Path 'HKCU:\Software\Youdao\Dict')) {
@@ -79,6 +82,8 @@ try {
         if ($loaded.Count -gt 0 -and -not $stableSince) { $stableSince = Get-Date }
     } until (($stableSince -and ((Get-Date) - $stableSince).TotalSeconds -ge 30) -or (Get-Date) -ge $deadline)
     if (-not $stableSince -or ((Get-Date) - $stableSince).TotalSeconds -lt 30) {
+        $process | Select-Object Id,Path,MainWindowTitle | Format-List | Out-Host
+        $process | ForEach-Object { $_.Modules } | Select-Object ModuleName,FileName | Format-Table | Out-Host
         throw 'Restored application did not load its own libcef.dll and stay alive for 30 seconds.'
     }
     if ((Get-Content -LiteralPath (Join-Path $desk 'config.ini') -Raw) -notmatch '(?m)^AUTOUPDATE=0\s*$') {

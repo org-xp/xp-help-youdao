@@ -18,7 +18,7 @@ jobs:
         shell: powershell
         working-directory: restored project
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
         with:
           path: restored project
           fetch-depth: 0
@@ -44,7 +44,9 @@ jobs:
           $target = Join-Path $env:RUNNER_TEMP 'restored portable with spaces'
           Expand-Archive -LiteralPath .\dist\YoudaoDict-8.10.8.0-Portable-Windows.zip -DestinationPath $target
           $script = Join-Path $target 'YoudaoDict-8.10.8.0-Portable-Windows\scripts\test-recovery.ps1'
-          & $script -SmokeTest
+          # Windows PowerShell 5.1 must match the x86 application's bitness to inspect its modules.
+          & "$env:windir\SysWOW64\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -ExecutionPolicy Bypass -File $script -SmokeTest
+          if ($LASTEXITCODE -ne 0) { throw 'Restored application startup test failed.' }
       - name: Keep verified recovery files for 90 days
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
