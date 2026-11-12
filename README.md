@@ -5,7 +5,7 @@
 
 ## 普通用户：下载即可使用
 
-1. 打开 [最新 Release](https://github.com/astmain/xp-youdao/releases/latest)。
+1. 打开 https://github.com/org-xp/xp-youdao/releases/latest
 2. 在 **Assets** 下载 **`YoudaoDict-8.10.8.0-Portable-Windows.zip`**。
 3. **完整解压**到有写入权限的文件夹，例如 `D:\Apps\YoudaoDict`。不要直接在压缩包里运行。
 4. 退出已经运行的其他有道词典，双击 **`start-youdao.cmd`**。
@@ -44,7 +44,7 @@ Get-FileHash .\YoudaoDict-8.10.8.0-Portable-Windows.zip -Algorithm SHA256
 
 ```powershell
 git lfs install
-git clone https://github.com/astmain/xp-youdao.git
+git clone https://github.com/org-xp/xp-youdao.git
 cd xp-youdao
 git lfs pull
 .\start-youdao.cmd

@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "groups": [
+    {
+      "name": "开发工具",
+      "description": "AI、IDE 和编辑器相关目录",
+      "collapsed": true,
+      "order": 10,
+      "items": [
+        ".agents",
+        ".claude",
+        ".codex",
+        ".idea"
+      ]
+    },
+    {
+      "name": "构建生成物",
+      "collapsed": true,
+      "order": 20,
+      "items": [
+        ".nuxt",
+        ".output"
+      ]
+    }
+  ]
+}
