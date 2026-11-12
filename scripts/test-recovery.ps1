@@ -59,8 +59,11 @@ try {
     $cmd = Start-Process -FilePath $env:ComSpec -ArgumentList ('/d /c ""' + $launcher + '""') `
         -WorkingDirectory $env:RUNNER_TEMP -WindowStyle Hidden -PassThru `
         -RedirectStandardOutput ($log + '.out') -RedirectStandardError ($log + '.err')
+    # Retain the process handle before it exits (Windows PowerShell 5.1).
+    $null = $cmd.Handle
     $started[$cmd.Id] = $true
     if (-not $cmd.WaitForExit(60000)) { throw 'Launcher did not exit within 60 seconds.' }
+    $cmd.WaitForExit()
     Get-Content -LiteralPath ($log + '.out'),($log + '.err')
     if ($cmd.ExitCode -ne 0) { throw "Launcher exit code: $($cmd.ExitCode)" }
     $deadline = (Get-Date).AddSeconds(90)
