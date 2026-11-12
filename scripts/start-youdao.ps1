@@ -36,6 +36,8 @@ $cef = Join-Path $RepoRoot '8.10.8.0\libcef.dll'
 if (-not (Test-Path -LiteralPath $cef) -or (Get-Item -LiteralPath $cef).Length -ne 143979576) {
     throw 'Runtime missing or incomplete. Extract the full Release ZIP, or run git lfs pull.'
 }
+# Catch missing or changed DLLs before modifying the user's shared configuration.
+& (Join-Path $PSScriptRoot 'test-recovery.ps1') -RepoRoot $RepoRoot
 $otherCopy = Get-Process YoudaoDict -ErrorAction SilentlyContinue | Where-Object { $_.Path -and $_.Path -ne $exe }
 if ($otherCopy) {
     throw 'Another copy of Youdao Dict is running. Exit it before starting this folder.'

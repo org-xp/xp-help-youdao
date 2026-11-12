@@ -72,7 +72,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\test-recovery.ps1
 .\start-youdao.cmd
 ```
 
-`test-recovery.ps1` 校验全部 **612 个程序、词库和组件文件**的 SHA-256、程序版本、启动文件及 PowerShell 语法；默认不启动程序，不修改注册表或个人设置。
+`test-recovery.ps1` 校验全部 **612 个程序、词库和组件文件**的 SHA-256、程序版本、启动文件及 PowerShell 语法；默认不启动程序，不修改注册表或个人设置。推荐启动入口也会先执行此检查，文件损坏时先报错，不会先改动个人配置。
 清单来自从正式仓库全新拉取的 8.10.8.0 基线，不依赖旧工作目录。它只能确认文件完整，不能替代实际启动测试。
 
 GitHub Actions 中的 **Restore and launch on clean Windows** 会在每次 `main` 推送和 Pull Request 时：
